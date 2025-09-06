@@ -1,6 +1,7 @@
 import java.util.*;
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 public class Management {
     static void addBook() {
@@ -231,7 +232,7 @@ public class Management {
     static void borrowbook() {
         try {
             Connection con = DBConnection.getConnection();
-            String sql = "INSERT INTO borrow(bookid, member_id, borrow_date,return_date ) VALUES(?, ?, ?, ?)";
+            String sql = "INSERT INTO borrow(bookid, member_id, borrow_date,return_date,fine ) VALUES(?, ?, ?, ?, ?)";
             PreparedStatement ps = con.prepareStatement(sql);
             Scanner sc = new Scanner(System.in);
             System.out.print("Enter BookId: ");
@@ -240,10 +241,16 @@ public class Management {
             int member_id = sc.nextInt();
             LocalDate today = LocalDate.now();
             LocalDate returndate = today.plusDays(7);
+            long daysLate = ChronoUnit.DAYS.between(returndate, LocalDate.now());
+            long fine = 0;
+            if (daysLate > 0) {
+                fine = daysLate * 50;
+            }
             ps.setInt(1, bookid);
             ps.setInt(2, member_id);
             ps.setDate(3, java.sql.Date.valueOf(today));
             ps.setDate(4, java.sql.Date.valueOf(returndate));
+            ps.setLong(5, fine);
             int rows = ps.executeUpdate();
             if (rows > 0) {
                 System.out.println("Borrow Book Successful...");
